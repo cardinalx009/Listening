@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Practice Test</title>
+    <style>
+        /* CSS Reset and Basic Styling */
+        :root {
+            --primary-bg: #f4f7f6;
+            --secondary-bg: #ffffff;
+            --header-bg: #2c3e50;
+            --header-text: #ecf0f1;
+            --text-color: #333;
+            --border-color: #d1d5db;
+            --accent-color: #3498db;
+            --highlight-color: #f1c40f;
+            --correct-color: #2ecc71;
+            --incorrect-color: #e74c3c;
+            --answered-color: #e67e22;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header Styling */
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 40px;
+            background-color: var(--header-bg);
+            color: var(--header-text);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .fixed-header h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .audio-controls-container {
+            margin-left: auto;
+            margin-right: 0;
+            
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--secondary-bg);
+            border-radius: 5px;
+            margin: 0.5rem 0;
+            height: 30px;
+        }
+
+        .audio-controls button {
+            background: var(--accent-color);
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .audio-controls button:hover {
+            background-color: #2980b9;
+        }
+
+        .audio-controls .play-pause {
+            font-size: 1.2rem;
+            padding: 0.5rem 1.5rem;
+        }
+
+        .audio-controls .time {
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        /* Main Content Area */
+        .main-container {
+            margin-top: 60px; /* Header height */
+            margin-bottom: 70px; /* Footer height */
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Single Panel Layout */
+        #panel-container {
+            display: flex;
+            flex-grow: 1;
+            height: 100%;
+        }
+
+        #questions-panel {
+            width: 100%;
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 5px 20px 20px 20px;
+            overflow: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-content {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        /* Test Part Styling */
+        .test-part {
+            display: none; /* Hidden by default */
+        }
+        .test-part.active {
+            display: block;
+        }
+
+        /* Question Formatting */
+        .question-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .question-group h3 {
+            margin-top: 0;
+            color: var(--accent-color);
+        }
+        .question-group p, .question-group li {
+            line-height: 1.6;
+        }
+        .question-group ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .question-group ul li {
+            margin-bottom: 10px;
+        }
+        .question-group input[type="text"] {
+            border: none;
+            border-bottom: 1px solid #999;
+            width: 150px;
+            font-size: 1em;
+            text-align: center;
+        }
+        .question-group input[type="text"]:focus {
+            outline: none;
+            border-bottom: 2px solid var(--accent-color);
+        }
+        .option-group { margin: 10px 0; }
+        .option-group label { display: block; margin: 5px 0 5px 20px; }
+        select { padding: 5px; border-radius: 4px; border: 1px solid var(--border-color); }
+        
+        /* Submission and Results */
+        #submit-btn {
+            display: none;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #submit-btn:hover { background-color: #2980b9; }
+
+        #results-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--primary-bg);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+        }
+         #results-container h3 { margin-top: 0; }
+
+        /* Highlighting Styles */
+        .text-highlight {
+            background-color: var(--highlight-color);
+            cursor: pointer;
+        }
+        #context-menu {
+            position: absolute;
+            display: none;
+            background-color: #333;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1001;
+        }
+        #context-menu button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #context-menu button:hover {
+            background-color: #555;
+        }
+        
+        /* Footer & Navigation */
+        .fixed-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--secondary-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+        }
+        
+        #section-nav button {
+            padding: 10px 15px;
+            font-size: 1em;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-right: 10px;
+            cursor: pointer;
+            background-color: #ecf0f1;
+        }
+        
+        #section-nav button.active {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        #progress-tracker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .progress-square {
+            width: 18px;
+            height: 18px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            transition: background-color 0.3s;
+        }
+
+        .progress-square.answered { background-color: var(--answered-color); }
+        .progress-square.correct { background-color: var(--correct-color); }
+        .progress-square.incorrect { background-color: var(--incorrect-color); }
+.audio-controls-container{
+    margin-left: 200px;
+}
+        /* Mobile Responsive Styles */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .fixed-header {
+                height: 60px;
+                padding: 12px 16px;
+            }
+
+            .fixed-header h1 {
+                font-size: 1.2em;
+            }
+
+            .audio-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+                padding: 0.75rem;
+                height: 30px;
+                margin-left: -50px;
+            }
+
+            .audio-controls button {
+                width: 100%;
+               display: flex;
+                font-size: 10px;
+                text-align: center;
+                justify-content: center;
+                align-items: center;
+
+                height: 10px;
+            }
+
+            .audio-controls .play-pause {
+                font-size: 1.5rem;
+                padding: 1rem;
+            }
+
+            .main-container {
+                margin-top: 70px;
+                margin-bottom: 80px;
+                padding: 10px;
+            }
+
+            #panel-container {
+                padding: 0;
+            }
+
+            #questions-panel {
+                padding: 10px;
+            }
+
+            .question-group {
+                padding: 10px;
+            }
+
+            .question-group h3 {
+                font-size: 1.2em;
+            }
+
+            .question-group p {
+                font-size: 0.95em;
+                line-height: 1.5;
+            }
+
+            .question-group input[type="text"] {
+                width: 100%;
+                margin: 5px 0;
+            }
+
+            #submit-btn {
+                padding: 1rem;
+                font-size: 1.1em;
+            }
+
+            .fixed-footer {
+                height: 60px;
+                padding: 10px;
+            }
+
+            #section-nav button {
+                width: 100%;
+                margin: 5px 0;
+                padding: 0.75rem;
+                font-size: 0.95rem;
+            }
+        }
+
+        /* Audio Controls Styling */
+        .audio-controls {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .audio-controls button {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Start Modal Styles */
+        .start-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .start-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .start-modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 4px 6px -1px var(--shadow-color);
+        }
+
+        .start-modal-content h2 {
+            color: var(--header-bg);
+            margin-bottom: 1rem;
+        }
+
+        .start-modal-content p {
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+        }
+
+        .start-modal-content .start-btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-color), #2563eb);
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-modal-content .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px var(--shadow-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="start-modal" id="startModal">
+        <div class="start-modal-content">
+            <h2>Listening Practice Test</h2>
+            <p>Duration: 36 minutes 20 seconds</p>
+            <p>Click the button below to start the listening test. The audio will begin playing automatically.</p>
+            <button class="start-btn" id="startBtn">Start Listening Test</button>
+        </div>
+    </div>
+
+    <header class="fixed-header">
+        <h1>Practice Test</h1>
+        <div class="audio-controls-container">
+            <div class="audio-controls">
+                <button id="playPauseBtn" class="play-pause">Play</button>
+                <span id="audioTime" class="time">00:00 / 00:00</span>
+            </div>
+        </div>
+    </header>
+
+    <audio id="testAudio" controls preload="metadata">
+        <source src="./mix_36m20s (audio-joiner.com).mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <div id="context-menu"></div>
+
+    <main class="main-container">
+        <div id="panel-container">
+            <div id="questions-panel">
+                <div class="panel-content">
+                    <div id="part1" class="test-part">
+                        <div class="question-group">
+                            <h3>Questions 1 - 10</h3>
+                            <p>Complete the notes below. Write <strong>ONE WORD AND/OR A NUMBER</strong> for each answer.</p>
+                            <h4>Adventure Camp</h4>
+                            <ul>
+                                <li><strong>1.</strong> The camp can take up to <input type="text" name="q1"> people.</li>
+                                <li><strong>2.</strong> Cost: £<input type="text" name="q2"> for two days.</li>
+                            </ul>
+                            <p><strong>DAY ONE</strong></p>
+                            <ul>
+                                <li><strong>3.</strong> Morning: A lesson in riding a <input type="text" name="q3">.</li>
+                                <li><strong>4.</strong> Afternoon: Go down the river by <input type="text" name="q4">.</li>
+                                <li><strong>5.</strong> Explore one of the <input type="text" name="q5"> (a <strong>6.</strong> <input type="text" name="q6"> is provided).</li>
+                                <li><strong>7.</strong> Evening: Dinner - either a barbecue, <input type="text" name="q7"> or pizza.</li>
+                            </ul>
+                             <p><strong>DAY TWO</strong></p>
+                            <ul>
+                                <li><strong>8.</strong> Morning: Cycle to a <input type="text" name="q8"> and back.</li>
+                                <li><strong>9.</strong> Afternoon: Play <input type="text" name="q9">.</li>
+                                <li><strong>10.</strong> Learn how to make <input type="text" name="q10">.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="part2" class="test-part">
+                        <div class="question-group">
+                            <h3>Questions 11 - 15</h3>
+                            <p>Choose the correct letter, <strong>A, B or C.</strong></p>
+                            
+                            <p><strong>11.</strong> Why are restaurants currently looking for more staff?</p>
+                            <div class="option-group">
+                                <label><input type="radio" name="q11" value="a"> A. Additional staff will be required for the food festival.</label>
+                                <label><input type="radio" name="q11" value="b"> B. They always need extra staff during the summer.</label>
+                                <label><input type="radio" name="q11" value="c"> C. Greater numbers of people are using restaurants in the area.</label>
+                            </div>
+
+                            <p><strong>12.</strong> What kind of work are staff most needed for?</p>
+                             <div class="option-group">
+                                <label><input type="radio" name="q12" value="a"> A. kitchen duties</label>
+                                <label><input type="radio" name="q12" value="b"> B. serving customers</label>
+                                <label><input type="radio" name="q12" value="c"> C. administration</label>
+                            </div>
+
+                            <p><strong>13.</strong> The speaker says that the working hours will particularly suit people...</p>
+                             <div class="option-group">
+                                <label><input type="radio" name="q13" value="a"> A. who are also studying.</label>
+                                <label><input type="radio" name="q13" value="b"> B. who have young families.</label>
+                                <label><input type="radio" name="q13" value="c"> C. who dislike getting up early.</label>
+                            </div>
+
+                            <p><strong>14.</strong> What skill is particularly important for kitchen staff?</p>
+                             <div class="option-group">
+                                <label><input type="radio" name="q14" value="a"> A. communication with customers</label>
+                                <label><input type="radio" name="q14" value="b"> B. teamwork</label>
+                                <label><input type="radio" name="q14" value="c"> C. working with numbers</label>
+                            </div>
+
+                             <p><strong>15.</strong> What advice does the speaker give about CVs?</p>
+                             <div class="option-group">
+                                <label><input type="radio" name="q15" value="a"> A. Include a recent photo.</label>
+                                <label><input type="radio" name="q15" value="b"> B. Check contact details are up to date.</label>
+                                <label><input type="radio" name="q15" value="c"> C. List all relevant qualifications.</label>
+                            </div>
+                        </div>
+                        <div class="question-group">
+                            <h3>Questions 16 - 20</h3>
+                            <p>Choose the correct letter, <strong>A-G</strong>, next to questions 16-20.</p>
+                            <ul>
+                                <li><strong>A</strong> convenient for public transport</li>
+                                <li><strong>B</strong> interesting and stylish food</li>
+                                <li><strong>C</strong> attracts many different types of customer</li>
+                                <li><strong>D</strong> recommended by a food website</li>
+                                <li><strong>E</strong> part of a successful chain</li>
+                                <li><strong>F</strong> opportunities for longer term employment</li>
+                                <li><strong>G</strong> accommodation available for staff</li>
+                            </ul>
+                            <p><strong>16.</strong> The Tower: <select name="q16"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option></select></p>
+                            <p><strong>17.</strong> Beachside: <select name="q17"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option></select></p>
+                            <p><strong>18.</strong> Marco's: <select name="q18"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option></select></p>
+                            <p><strong>19.</strong> Silveriea: <select name="q19"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option></select></p>
+                            <p><strong>20.</strong> The Lion: <select name="q20"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option></select></p>
+                        </div>
+                    </div>
+                    
+                    <div id="part3" class="test-part">
+                        <div class="question-group">
+                            <h3>Questions 21 - 24</h3>
+                            <p>Choose the correct letter, <strong>A, B or C.</strong></p>
+
+                            <p><strong>21.</strong> Simon thinks the Global Communications major...</p>
+                            <div class="option-group">
+                                <label><input type="radio" name="q21" value="a"> A. Will help him get work in Other countries.</label>
+                                <label><input type="radio" name="q21" value="b"> B. has easier courses than the Public Relations major.</label>
+                                <label><input type="radio" name="q21" value="c"> C. could lead to a well-paid job in New Zealand.</label>
+                            </div>
+
+                            <p><strong>22.</strong> Simon says that the Economic Principles course was...</p>
+                            <div class="option-group">
+                                <label><input type="radio" name="q22" value="a"> A. too challenging for him.</label>
+                                <label><input type="radio" name="q22" value="b"> B. uninteresting as a subject.</label>
+                                <label><input type="radio" name="q22" value="c"> C. similar to other courses on the major.</label>
+                            </div>
+
+                            <p><strong>23.</strong> Anna thinks that the foreign language courses...</p>
+                            <div class="option-group">
+                                <label><input type="radio" name="q23" value="a"> A. give students a better understanding of the whole major.</label>
+                                <label><input type="radio" name="q23" value="b"> B. are less useful than the courses dealing with culture.</label>
+                                <label><input type="radio" name="q23" value="c"> C. should remain optional to students.</label>
+                            </div>
+
+                             <p><strong>24.</strong> What reason does Anna give for her choice of foreign language?</p>
+                             <div class="option-group">
+                                <label><input type="radio" name="q24" value="a"> A. It was a language she had previously studied.</label>
+                                <label><input type="radio" name="q24" value="b"> B. It would enable her to travel.</label>
+                                <label><input type="radio" name="q24" value="c"> C. It could be useful in commerce.</label>
+                            </div>
+                        </div>
+
+                        <div class="question-group">
+                            <h3>Questions 25 and 26</h3>
+                            <p>Choose <strong>TWO</strong> letters, <strong>A-E</strong>. Which TWO things do Anna and Simon both appreciate about their lecturers?</p>
+                             <div class="option-group" id="q25-26-options">
+                                <label><input type="checkbox" name="q25_26" value="a"> A. They encourage freedom of thought.</label>
+                                <label><input type="checkbox" name="q25_26" value="b"> B. They help individual students in seminars.</label>
+                                <label><input type="checkbox" name="q25_26" value="c"> C. They are willing to adapt courses.</label>
+                                <label><input type="checkbox" name="q25_26" value="d"> D. They are enthusiastic about their subject.</label>
+                                <label><input type="checkbox" name="q25_26" value="e"> E. They encourage students to improve.</label>
+                            </div>
+                        </div>
+
+                        <div class="question-group">
+                            <h3>Questions 27 - 30</h3>
+                             <p>Which skills are developed in the following courses? Choose FOUR answers from the box and write the correct letter, <strong>A-F</strong>, next to questions 27-30.</p>
+                             <ul>
+                                <li><strong>A</strong> making decisions under pressure</li>
+                                <li><strong>B</strong> working in large groups</li>
+                                <li><strong>C</strong> reducing problems between co-workers</li>
+                                <li><strong>D</strong> talking in public</li>
+                                <li><strong>E</strong> understanding cultural differences</li>
+                                <li><strong>F</strong> using logical argument</li>
+                             </ul>
+                             <p><strong>27.</strong> Communication 1: <select name="q27"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option></select></p>
+                             <p><strong>28.</strong> Psychology: <select name="q28"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option></select></p>
+                             <p><strong>29.</strong> Interpersonal Skills: <select name="q29"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option></select></p>
+                             <p><strong>30.</strong> Communication 3: <select name="q30"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option></select></p>
+                        </div>
+                    </div>
+
+                    <div id="part4" class="test-part">
+                         <div class="question-group">
+                             <h3>Questions 31 - 34</h3>
+                             <p>Complete the sentences below. Write <strong>ONE WORD ONLY</strong> for each answer.</p>
+                             <ul>
+                                <li><strong>31.</strong> The ancient Greeks and Romans used spices in cooking food and also in the preparation of <input type="text" name="q31">.</li>
+                                <li><strong>32.</strong> The ancient Romans used certain spices to display their <input type="text" name="q32">.</li>
+                                <li><strong>33.</strong> The search for spices contributed to the <input type="text" name="q33"> of the New World.</li>
+                                <li><strong>34.</strong> Spices were used as medicine and it was also believed they could change a person's <input type="text" name="q34">.</li>
+                            </ul>
+                         </div>
+                         <div class="question-group">
+                             <h3>Questions 35 - 37</h3>
+                             <p>Complete the table below. Write <strong>NO MORE THAN TWO WORDS</strong> for each answer.</p>
+                            <ul>
+                               <li><strong>35.</strong> Nutmeg was used to reduce the pain of <input type="text" name="q35">.</li>
+                               <li><strong>36.</strong> Peppercorns were used to take the place of <input type="text" name="q36">.</li>
+                               <li><strong>37.</strong> Burnt spices were used to hide domestic <input type="text" name="q37">.</li>
+                            </ul>
+                         </div>
+                         <div class="question-group">
+                              <h3>Questions 38 - 40</h3>
+                             <p>Complete the notes below. Write <strong>NO MORE THAN TWO WORDS</strong> for each answer.</p>
+                             <ul>
+                                <li><strong>38.</strong> Greatest expense: <input type="text" name="q38"> costs</li>
+                                <li><strong>39.</strong> Demand for spices led to development of the European <input type="text" name="q39"> industry</li>
+                                <li><strong>40.</strong> Cities received valuable <input type="text" name="q40"> from merchants</li>
+                             </ul>
+                         </div>
+                    </div>
+                </div>
+                <button id="submit-btn">Submit Answers</button>
+                <div id="results-container" style="display:none;"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="fixed-footer">
+        <div id="section-nav">
+            <button data-part="1" class="active">Part 1</button>
+            <button data-part="2">Part 2</button>
+            <button data-part="3">Part 3</button>
+            <button data-part="4">Part 4</button>
+        </div>
+        <div id="progress-tracker"></div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- ANSWER KEY ---
+            const answerKey = {
+                'q1': '44', 'q2': '180', 'q3': 'horse', 'q4': 'canoe', 'q5': 'caves',
+                'q6': 'helmet', 'q7': 'pasta', 'q8': 'village', 'q9': 'basketball', 'q10': 'butter',
+                'q11': 'c', 'q12': 'a', 'q13': 'a', 'q14': 'b', 'q15': 'b',
+                'q16': 'a', 'q17': 'f', 'q18': 'd', 'q19': 'b', 'q20': 'g',
+                'q21': 'a', 'q22': 'b', 'q23': 'a', 'q24': 'c', 
+                'q25_26': 'a,e', // Combined key for checkbox group
+                'q27': 'd', 'q28': 'b', 'q29': 'c', 'q30': 'e',
+                'q31': 'perfumes', 'q32': 'wealth', 'q33': 'exploration', 'q34': 'mood', 'q35': 'toothache',
+                'q36': 'money', 'q37': 'smells', 'q38': 'transport', 'q39': 'ship building', 'q40': 'income'
+            };
+
+            // --- DOM Element References ---
+            const navButtons = document.querySelectorAll('#section-nav button');
+            const testParts = document.querySelectorAll('.test-part');
+            const progressTracker = document.getElementById('progress-tracker');
+            const submitBtn = document.getElementById('submit-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const allInputs = document.querySelectorAll('input[type="text"], input[type="radio"], input[type="checkbox"], select');
+            const contextMenu = document.getElementById('context-menu');
+
+            let currentHighlightTarget = null;
+
+            // --- Section Navigation ---
+            navButtons.forEach(button => button.addEventListener('click', () => {
+                const partNumber = button.getAttribute('data-part');
+                showPart(partNumber);
+                
+                // Show submit button only in Part 4
+                if (partNumber === '4') {
+                    submitBtn.style.display = 'block';
+                } else {
+                    submitBtn.style.display = 'none';
+                }
+            }));
+
+            const showPart = (partNumber) => {
+                navButtons.forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-part') === partNumber));
+                testParts.forEach(part => part.classList.toggle('active', part.id === `part${partNumber}`));
+            };
+            
+            // --- Text Highlighting Logic ---
+            const hideContextMenu = () => {
+                contextMenu.style.display = 'none';
+                currentHighlightTarget = null;
+            };
+
+            const showContextMenu = (x, y, type, target) => {
+                contextMenu.innerHTML = ''; // Clear previous buttons
+                let button;
+                if (type === 'highlight') {
+                    button = document.createElement('button');
+                    button.textContent = 'Highlight';
+                    button.onclick = applyHighlight;
+                } else if (type === 'unhighlight') {
+                    currentHighlightTarget = target;
+                    button = document.createElement('button');
+                    button.textContent = 'Unhighlight';
+                    button.onclick = removeHighlight;
+                }
+                contextMenu.appendChild(button);
+                contextMenu.style.left = `${x}px`;
+                contextMenu.style.top = `${y}px`;
+                contextMenu.style.display = 'block';
+            };
+            
+            const applyHighlight = () => {
+                const selection = window.getSelection();
+                if (!selection.rangeCount) return;
+                const range = selection.getRangeAt(0);
+                const span = document.createElement('span');
+                span.className = 'text-highlight';
+                try {
+                    span.appendChild(range.extractContents());
+                    range.insertNode(span);
+                } catch (e) { console.error("Highlighting error:", e); }
+                selection.removeAllRanges();
+                hideContextMenu();
+            };
+
+            const removeHighlight = () => {
+                if (!currentHighlightTarget) return;
+                
+                const parent = currentHighlightTarget.parentNode;
+                while (currentHighlightTarget.firstChild) {
+                    parent.insertBefore(currentHighlightTarget.firstChild, currentHighlightTarget);
+                }
+                parent.removeChild(currentHighlightTarget);
+                parent.normalize();
+                hideContextMenu();
+            };
+
+            document.addEventListener('mouseup', (e) => {
+                // Don't show menu if clicking inside it
+                if (contextMenu.contains(e.target)) return;
+                
+                const selection = window.getSelection();
+                if (selection && !selection.isCollapsed && selection.toString().trim().length > 0) {
+                    const range = selection.getRangeAt(0);
+                    // Don't show menu if selecting over an existing highlight
+                    if(range.startContainer.parentNode.classList.contains('text-highlight') || range.endContainer.parentNode.classList.contains('text-highlight')) {
+                        hideContextMenu();
+                        return;
+                    }
+                    const rect = range.getBoundingClientRect();
+                    showContextMenu(e.pageX, e.pageY + 10, 'highlight');
+                } else {
+                    // Hide if no text is selected, unless we clicked on a highlight
+                    if (!e.target.matches('.text-highlight')) {
+                        hideContextMenu();
+                    }
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (e.target.matches('.text-highlight')) {
+                    showContextMenu(e.pageX, e.pageY + 10, 'unhighlight', e.target);
+                } else if (!contextMenu.contains(e.target)) {
+                    hideContextMenu();
+                }
+            });
+
+
+            // --- Progress Tracking & Initialization ---
+            const initializeTest = () => {
+                Object.keys(answerKey).filter(k => !k.includes(',')).forEach(key => {
+                     let title = `Question ${key.substring(1)}`;
+                     if (key === 'q25_26') title = 'Questions 25 & 26';
+                     
+                     const square = document.createElement('div');
+                     square.className = 'progress-square';
+                     square.id = `progress-${key}`;
+                     square.title = title;
+                     progressTracker.appendChild(square);
+                });
+
+                allInputs.forEach(input => {
+                    input.addEventListener('change', (e) => updateProgress(e.target));
+                    if(input.type === 'text') input.addEventListener('input', (e) => updateProgress(e.target));
+                });
+
+                showPart('1');
+            };
+            
+            const updateProgress = (element) => {
+                const key = element.name === 'q25_26' ? 'q25_26' : element.name;
+                const progressSquare = document.getElementById(`progress-${key}`);
+                if (!progressSquare) return;
+
+                let isAnswered = false;
+                if (element.name === 'q25_26') {
+                     isAnswered = !!document.querySelector('input[name="q25_26"]:checked');
+                } else {
+                    isAnswered = element.value.trim() !== '';
+                }
+                progressSquare.classList.toggle('answered', isAnswered);
+            };
+
+            // --- Submission and Evaluation ---
+            submitBtn.addEventListener('click', () => {
+                if (!confirm("Are you sure you want to submit your answers?")) return;
+                
+                submitBtn.disabled = true;
+                submitBtn.style.backgroundColor = '#7f8c8d';
+
+                let score = 0;
+                const incorrectAnswers = [];
+                const normalize = (val) => val.trim().toLowerCase();
+
+                for (const key in answerKey) {
+                    const progressSquare = document.getElementById(`progress-${key}`);
+                    let userAnswer, isCorrect = false;
+
+                    if (key === 'q25_26') {
+                        userAnswer = Array.from(document.querySelectorAll('input[name="q25_26"]:checked')).map(cb => cb.value).sort().join(',');
+                        isCorrect = (userAnswer === answerKey[key]);
+                        if (isCorrect) score += 2;
+                        else incorrectAnswers.push({ question: "25 & 26", userAnswer: userAnswer.toUpperCase() || '""', correctAnswer: answerKey[key].toUpperCase() });
+                    } else {
+                        const input = document.querySelector(`[name="${key}"]`);
+                        if (input.type === 'radio') {
+                            const checked = document.querySelector(`input[name="${key}"]:checked`);
+                            userAnswer = checked ? checked.value : '';
+                        } else {
+                            userAnswer = normalize(input.value);
+                        }
+                        isCorrect = (userAnswer === normalize(answerKey[key]));
+                        if (isCorrect) score++;
+                        else incorrectAnswers.push({ question: key.substring(1), userAnswer: input.value.trim() || '""', correctAnswer: answerKey[key] });
+                    }
+                    if (progressSquare) progressSquare.className = `progress-square ${isCorrect ? 'correct' : 'incorrect'}`;
+                }
+                
+                // Display results
+                const totalQuestions = Object.keys(answerKey).filter(k => !k.includes(',')).length + 1; // +1 because q25_26 is one key for two questions
+                let resultsHTML = `<h3>Test Results</h3><p><strong>Overall Score:</strong> ${score} / ${totalQuestions}</p>`;
+
+                if (incorrectAnswers.length > 0) {
+                    resultsHTML += '<h4>Review Incorrect Answers:</h4><ul>';
+                    incorrectAnswers.forEach(item => {
+                        resultsHTML += `<li><strong>Q${item.question}:</strong> Your answer: "<em>${item.userAnswer}</em>" | Correct answer: "<strong>${item.correctAnswer}</strong>"</li>`;
+                    });
+                    resultsHTML += '</ul>';
+                } else {
+                    resultsHTML += '<p style="color: var(--correct-color);"><strong>Congratulations! All answers are correct!</strong></p>';
+                }
+                
+                resultsContainer.innerHTML = resultsHTML;
+                resultsContainer.style.display = 'block';
+                resultsContainer.scrollIntoView({ behavior: 'smooth' });
+            });
+
+            // --- Audio Player Logic ---
+            let isAudioStarted = false;
+            const audio = document.getElementById('testAudio');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const audioTime = document.getElementById('audioTime');
+
+            // Initialize audio time when metadata is loaded
+            audio.addEventListener('loadedmetadata', () => {
+                const totalMinutes = Math.floor(audio.duration / 60);
+                const totalSeconds = Math.floor(audio.duration % 60).toString().padStart(2, '0');
+                audioTime.textContent = `00:00 / ${totalMinutes}:${totalSeconds}`;
+            });
+
+            // Update current time as audio plays
+            audio.addEventListener('timeupdate', () => {
+                if (!isAudioStarted) return;
+                
+                const currentMinutes = Math.floor(audio.currentTime / 60);
+                const currentSeconds = Math.floor(audio.currentTime % 60).toString().padStart(2, '0');
+                audioTime.textContent = `${currentMinutes}:${currentSeconds} / ${audioTime.textContent.split(' / ')[1]}`;
+            });
+
+            // Play/pause toggle
+            playPauseBtn.addEventListener('click', () => {
+                if (!isAudioStarted) return;
+                
+                if (audio.paused) {
+                    audio.play();
+                    playPauseBtn.textContent = 'Pause';
+                } else {
+                    audio.pause();
+                    playPauseBtn.textContent = 'Play';
+                }
+            });
+
+            // --- Start Modal Logic ---
+            const startBtn = document.getElementById('startBtn');
+            const startModal = document.getElementById('startModal');
+
+            startBtn.addEventListener('click', () => {
+                // Hide start modal
+                startModal.classList.remove('active');
+                
+                // Start audio only when modal is closed
+                isAudioStarted = true;
+                audio.play();
+                playPauseBtn.textContent = 'Pause';
+            });
+
+            // Close modal when clicking outside
+            startModal.addEventListener('click', (e) => {
+                if (e.target === startModal) {
+                    startModal.classList.remove('active');
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && startModal.classList.contains('active')) {
+                    startModal.classList.remove('active');
+                }
+            });
+
+            // Show start modal when page loads
+            startModal.classList.add('active');
+            initializeTest();
+        });
+    </script>
+</body>
+</html>
