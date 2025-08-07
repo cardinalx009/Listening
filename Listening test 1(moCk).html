@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Practice Test</title>
+    <style>
+        /* CSS Reset and Basic Styling */
+        :root {
+            --primary-bg: #f4f7f6;
+            --secondary-bg: #ffffff;
+            --header-bg: #2c3e50;
+            --header-text: #ecf0f1;
+            --text-color: #333;
+            --border-color: #d1d5db;
+            --accent-color: #3498db;
+            --highlight-color: #f1c40f;
+            --correct-color: #2ecc71;
+            --incorrect-color: #e74c3c;
+            --answered-color: #e67e22;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Header Styling */
+        .fixed-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: white   ;
+            color: var(--header-text);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            
+            
+        }
+
+        .fixed-header h1 {
+           
+            
+        }
+        .img2{
+            h1{ margin: 0;
+            font-size: 20px;
+            margin-left: 5px;
+            color:#2686f6;
+            margin-top: -40px;}
+            img{
+                width: 120px;
+                height: 120px;
+                margin-top:-25px;
+            }
+            
+            
+           
+        }
+
+        .audio-controls-container {
+            margin-left: auto;
+            margin-right: 0;
+            
+        }
+
+        .audio-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            background: var(--secondary-bg);
+            border-radius: 5px;
+            margin: 0.5rem 0;
+            height: 30px;
+            margin-left: 300px;
+        }
+
+        .audio-controls button {
+            background: var(--accent-color);
+            border: none;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.2s ease;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .audio-controls button:hover {
+            background-color: #2980b9;
+        }
+
+        .audio-controls .play-pause {
+            font-size: 1.2rem;
+            padding: 0.5rem 1.5rem;
+        }
+
+        .audio-controls .time {
+            font-size: 0.9rem;
+            color: var(--text-color);
+        }
+
+        /* Main Content Area */
+        .main-container {
+            margin-top: 60px; /* Header height */
+            margin-bottom: 70px; /* Footer height */
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Single Panel Layout */
+        #panel-container {
+            display: flex;
+            flex-grow: 1;
+            height: 100%;
+        }
+
+        #questions-panel {
+            width: 100%;
+            background-color: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 5px 20px 20px 20px;
+            overflow: auto;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-content {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        /* Test Part Styling */
+        .test-part {
+            display: none; /* Hidden by default */
+        }
+        .test-part.active {
+            display: block;
+        }
+
+        /* Question Formatting */
+        .question-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .question-group h3 {
+            margin-top: 0;
+            color: var(--accent-color);
+        }
+        .question-group p, .question-group li {
+            line-height: 1.6;
+        }
+        .question-group ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .question-group ul li {
+            margin-bottom: 10px;
+        }
+        .question-group input[type="text"] {
+            border: none;
+            border-bottom: 1px solid #999;
+            width: 150px;
+            font-size: 1em;
+            text-align: center;
+        }
+        .question-group input[type="text"]:focus {
+            outline: none;
+            border-bottom: 2px solid var(--accent-color);
+        }
+        .option-group { margin: 10px 0; }
+        .option-group label { display: block; margin: 5px 0 5px 20px; }
+        select { padding: 5px; border-radius: 4px; border: 1px solid var(--border-color); }
+        
+        /* Submission and Results */
+        #submit-btn {
+            display: none;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #submit-btn:hover { background-color: #2980b9; }
+
+        #results-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: var(--primary-bg);
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+        }
+         #results-container h3 { margin-top: 0; }
+
+        /* Highlighting Styles */
+        .text-highlight {
+            background-color: var(--highlight-color);
+            cursor: pointer;
+        }
+        #context-menu {
+            position: absolute;
+            display: none;
+            background-color: #333;
+            color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1001;
+        }
+        #context-menu button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        #context-menu button:hover {
+            background-color: #555;
+        }
+        
+        /* Footer & Navigation */
+        .fixed-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--secondary-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 20px;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+        }
+        
+        #section-nav button {
+            padding: 10px 15px;
+            font-size: 1em;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-right: 10px;
+            cursor: pointer;
+            background-color: #ecf0f1;
+        }
+        
+        #section-nav button.active {
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        #progress-tracker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            align-items: center;
+            margin-right: 100px;
+        }
+
+        .progress-square {
+            width: 18px;
+            height: 18px;
+            background-color: #e0e0e0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            transition: background-color 0.3s;
+        }
+
+        .progress-square.answered { background-color: var(--answered-color); }
+        .progress-square.correct { background-color: var(--correct-color); }
+        .progress-square.incorrect { background-color: var(--incorrect-color); }
+.audio-controls-container{
+    margin-left: 200px;
+}
+#questions-panel {
+                padding: 10px;
+                    background-image: url("https://github.com/cardinalx009/Listening/blob/main/KING%20SCHOOL%20(1).png?raw=true");
+                    background-size:500px;
+                    background-position: center;
+                    background-position-y: 10px;
+                    background-repeat: no-repeat;
+                      
+            }
+     
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 0;
+            }
+
+            .fixed-header {
+                height: 60px;
+                padding: 12px 16px;
+            }
+
+            .fixed-header h1 {
+                font-size: 1.2em;
+            }
+
+            .audio-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+                padding: 0.75rem;
+                height: 30px;
+                margin-left: -100px;
+            }
+
+            .audio-controls button {
+                width: 100%;
+               display: flex;
+                font-size: 10px;
+                text-align: center;
+                justify-content: center;
+                align-items: center;
+
+                height: 10px;
+            }
+
+            .audio-controls .play-pause {
+                font-size: 1.5rem;
+                padding: 1rem;
+            }
+
+            .main-container {
+                margin-top: 70px;
+                margin-bottom: 80px;
+                padding: 10px;
+            }
+
+            #panel-container {
+                padding: 0;
+            }
+
+            #questions-panel {
+                padding: 10px;
+                    background-image: url("https://github.com/cardinalx009/Listening/blob/main/KING%20SCHOOL%20(1).png?raw=true");
+                    background-size: cover;
+                    background-position-y:0px;
+                    
+            }
+
+            .question-group {
+                padding: 10px;
+            }
+
+            .question-group h3 {
+                font-size: 1.2em;
+            }
+
+            .question-group p {
+                font-size: 0.95em;
+                line-height: 1.5;
+            }
+
+            .question-group input[type="text"] {
+                width: 100%;
+                margin: 5px 0;
+            }
+
+            #submit-btn {
+                padding: 1rem;
+                font-size: 1.1em;
+            }
+
+            .fixed-footer {
+                height: 60px;
+                padding: 10px;
+            }
+
+            #section-nav button {
+                width: 100%;
+                margin: 5px 0;
+                padding: 0.75rem;
+                font-size: 10px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+            }
+        }
+
+        /* Audio Controls Styling */
+        .audio-controls {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .audio-controls button {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Start Modal Styles */
+        .start-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .start-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .start-modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 4px 6px -1px var(--shadow-color);
+        }
+
+        .start-modal-content h2 {
+            color: var(--header-bg);
+            margin-bottom: 1rem;
+        }
+
+        .start-modal-content p {
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+        }
+
+        .start-modal-content .start-btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, var(--accent-color), #2563eb);
+            border: none;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-modal-content .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px var(--shadow-color);
+        }
+            .question-highlight {
+    border: 2px solid var(--correct-color);
+    padding: 5px;
+    margin: -5px;
+}
+
+.question-highlight.incorrect {
+    border-color: var(--incorrect-color);
+}
+.user-info-form {
+    margin: 20px 0;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+.form-group input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.text-highlight {
+    background-color: #ffff00 !important; /* bright yellow */
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.text-highlight:hover {
+    background-color: #ffeb3b !important;
+}
+.maptext{
+   display: flex;
+   .text{
+    
+    margin-top:100px; 
+    margin-right: 30px;
+    
+   }
+  
+   img{
+        height: 20px;
+        
+    }
+}
+    </style>
+</head>
+<body>
+    <div class="start-modal" id="startModal">
+        <div class="start-modal-content">
+            <h2>Listening Practice Test</h2>
+            <p>Duration: 36 minutes 20 seconds</p>
+            <p>Click the button below to start the listening test. The audio will begin playing automatically.</p>
+            <div class="user-info-form">
+                <div class="form-group">
+                    <label for="name">Ism:</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="surname">Familiya:</label>
+                    <input type="text" id="surname" required>
+                </div>
+            </div>
+            <button class="start-btn" id="startBtn">Start Listening Test</button>
+        </div>
+    </div>
+
+    <header class="fixed-header">
+        
+        
+        <div class="audio-controls-container">
+            <div class="audio-controls">
+                <button id="playPauseBtn" class="play-pause">Play</button>
+                <span id="audioTime" class="time">00:00 / 00:00</span>
+            </div>
+        </div>
+    </header>
+
+    <audio id="testAudio" controls preload="metadata">
+        <source src="mix_30m00s (audio-joiner.com).mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <div id="context-menu"></div>
+
+    <main class="main-container">
+        <div id="panel-container">
+            <div id="questions-panel">
+                <div class="panel-content">
+                    <div id="part1" class="test-part">
+                        <div class="question-group">
+                            <h3>Questions 1 - 10</h3>
+                            <p>Complete the notes below. Write <strong>ONE WORD AND/OR A NUMBER</strong> for each answer.</p>
+                            <h4>Swimming lessons</h4>
+                            <p>Classes available</p>
+                            <p> Water <b>Babies</b></p>
+
+                            <ul>
+                                <li><strong></strong> For babies of three months upwards <br>
+
+                                    Focus: water familiarisation using 
+                                    
+                                   <b>1.</b> <input type="text" name="q1"> <br> Cost: £3.80 per lesson</li>
+                                   <strong>Beginners</strong>
+                                <li>For people with no experience of swimming <br>
+
+                                    Focus:
+                                    
+                                 <b>2.</b> <input type="text" name="q2"> techniques <br>
+                                    
+                                 Opening the eyes underwater
+                                 <br>
+                                 
+                                 Swimming five metres</li>
+                            </ul>
+                            <p><strong>Intermediate</strong></p>
+                            <ul>
+                                <li><strong>Focus:</strong> <br>
+                            Learning main swimming strokes
+
+                                    Introduction to <b>3.</b><input type="text" name="q3"> <br>
+                                    
+                                    Swimming underwater <br>
+                                    
+                                    <b>4.</b> <input type="text" name="q4" />  in the water .</li>
+                                    <b>Cost <br>other information:</b>
+                                
+                                <li>Maximum of 12 pupils per class <br>
+
+                                    Class is for <b>5.</b><input type="text" name="q5"> </li>
+                                    <strong>Advances</strong>
+                                <li><strong>Focus:</strong> <br> More efficient techniques <br>
+
+                                    Improving <strong>6.</strong> <input type="text" name="q6"><br>Competitions</li>
+                                <strong>Other information:</strong> 
+                                <ul>
+                                    <li> Date when Intermediate course begins: Tuesday <b>7.</b><input type="text" name="q7">  <br>(Time: 7.30 p.m.) <br>
+                                        Participants will be provided with a swimming <b>8.</b><input type="text" name="q8"> <br>
+                                        Bring change for the <b>9.</b> <input type="text" name="q9">
+
+                                         </li>
+                                         <strong>Benefits of Swimming</strong> <br>
+                                         Health benefits <br>
+                                         Improvement in <b>10.</b><input type="text" name="q10"> <br>
+                                         Could save a life 
+                                </ul>
+                                
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div id="part2" class="test-part">
+                        <div class="question-group" id="map">
+                            <h3>Questions 11 - 15</h3>
+                            <p>Match the places to the map locations  <strong>A–E:</strong></p>
+                            <div class="maptext">  
+                   
+                                <div class="text"> <p><strong>11.</strong> Student Center: <select name="q11"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option></select></p>
+                                    <p><strong>12.</strong> Health Center: <select name="q12"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option></select></p>
+                                    <p><strong>13.</strong> Internet Unit: <select name="q13"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option></select></p>
+                                    <p><strong>14.</strong> Complaint Office: <select name="q14"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option>   </select></p>
+                                    <p><strong>15.</strong> Cafe: <select name="q15"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option></select></p></div>
+                                    <img  src="https://github.com/cardinalx009/Listening/blob/main/%D0%A1%D0%BD%D0%B8%D0%BC%D0%BE%D0%BA%20%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B0%20(20)(1)(1).png?raw=true" style="width: 500px; height: 400px;" alt="">
+                                </div>
+                          
+                           
+                        </div>
+                        <div class="question-group">
+                            <h3>Questions 16 - 20</h3>
+                            <i>Complete the sentences below:</i><br>
+                            <i>Write <strong>NO MORE THAN TWO WORDS AND/OR A NUMBER</strong> for each answer.</i>
+                            <ul>
+                               
+                                <li>
+                                   <b>16.</b>  Students in a room don't need to share a <input type="text" name="q16"> with ones in other rooms.</li>
+                                   <li><b>17.</b>  Everyone has to write down his name on the <input type="text" name="q17"> .</li>
+                                       <li><b>18.</b> All the students use a <input type="text" name="q18"> to enter the door.</li>
+                                   <li><b>19.</b>  If you want to wash your clothes, go to the laundry room which is located in the <input type="text" name="q19"> .</li>
+                                   <li><b>20.</b>  The dormitory closes at <input type="text" name="q20"> every night.</li>
+
+                        </div>
+                    </div>
+                    
+                    <div id="part3" class="test-part">
+                        <div class="question-group">
+                            <h3>Questions 21 - 24</h3>
+                            <i>Choose the correct letter, <strong>A, B or C.</strong></i>
+
+                            <p><strong>21.</strong> What skills does Peter want to learn?   </p>
+                            <div class="option-group">
+                                <label><input type="radio" name="q21" value="a"> A.How to organise ideas</label>
+                                <label><input type="radio" name="q21" value="b"> B. How to handle data</label>
+                                <label><input type="radio" name="q21" value="c"> C. how to write business proposal</label>
+                            </div>
+
+                            <p><strong>22.</strong> What is Peter's main strength?</p>
+                            <div class="option-group">
+                                <label><input type="radio" name="q22" value="a"> A. he is a good leader</label>
+                                <label><input type="radio" name="q22" value="b"> B. he is a good leader</label>
+                                <label><input type="radio" name="q22" value="c"> C. he can communicate well with many people</label>
+                            </div>
+
+                            <p><strong>23.</strong> What will the careers officer help Peter with?</p>
+                            <div class="option-group">
+                                <label><input type="radio" name="q23" value="a"> A.CV</label>
+                                <label><input type="radio" name="q23" value="b"> B. personal statemen</label>
+                                <label><input type="radio" name="q23" value="c"> C. school application form</label>
+                            </div>
+
+                             <p><strong>24.</strong> Why did Peter choose the IT business?</p>
+                             <div class="option-group">
+                                <label><input type="radio" name="q24" value="a"> A. to update his knowledge in the area</label>
+                                <label><input type="radio" name="q24" value="b"> B. to be good at presentations</label>
+                                <label><input type="radio" name="q24" value="c"> C. to prepare himself for lectures</label>
+                            </div>
+                            <p><strong>25.</strong>What will Peter do for the next term?</p>
+                             <div class="option-group">
+                                <label><input type="radio" name="q25" value="a"> A. continue with the same language </label>
+                                <label><input type="radio" name="q25" value="b"> B. change to another language</label>
+                                <label><input type="radio" name="q25" value="c"> C. discontinue the language course</label>
+                            </div>
+                        </div>
+
+                        
+
+                        <div class="question-group">
+                            <h3>Questions 26 - 30</h3>
+                            <i>Match the companies to job opportunities.</i>
+                             <i>Choose FIVE answers from the box and write the correct letter (A–G) next to each company.</i>
+                             <br><strong>Job Opportunities:</strong><br><br>
+                             <b>A.</b> make business contacts <br> 
+                             <b>B.</b> understand customer relations <br>
+                              <b>C.</b> learn time management <br>
+                               <b>D.</b> use a foreign language <br>
+                                <b>E.</b> travel to another country <br>
+                                 <b>F.</b> receive financial training <br>
+                                  <b>G.</b> learn project management
+                            
+                             <p><strong>26.</strong> SAIC <select name="q26"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option></select></p>
+                             <p><strong>27.</strong> Gemini Technologies <select name="q27"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option></select></p>
+                             <p><strong>28.</strong> Deloitte <select name="q28"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option></select></p>
+                             <p><strong>29.</strong> Kearney <select name="q29"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option></select></p>
+                             <p><strong>30.</strong> Vortex<select name="q30"><option value="">-</option><option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option><option value="e">E</option><option value="f">F</option><option value="g">G</option></select></p>
+                        </div>
+                    </div>
+
+                    <div id="part4" class="test-part">
+                         <div class="question-group">
+                             <h3>Questions 31 - 34</h3>
+                             <p>Complete the sentences below. Write <strong>ONE WORD ONLY</strong> for each answer.</p>
+                             <ul>
+                                <li><strong>31.</strong> Trust relies on the stranger's <input type="text" name="q31"></li>
+                                <li><strong>32.</strong> The understanding of trust can reduce <input type="text" name="q32"></li>
+                                <strong>How to measure trust</strong>
+                                <li><strong>33.</strong> People's ability of recognizing a person's <input type="text" name="q33"> </li>
+                                <li><strong>34.</strong> Oxytocin will be released when<input type="text" name="q34">occurs</li>
+                                <p> <strong>Experiment:</strong> two participants </p>
+                                <li>The first participant decides whether to lend the money or not.</li>
+                                 <li><strong>35.</strong>The second participant has no <input type="text" name="q35">to return the money.</li>
+                               <li><strong>36.</strong> Trust involves a <input type="text" name="q36">– so it is conditional.</li>
+                               <li><strong>37.</strong> If animals have <input type="text" name="q37">, they will be seen to have oxytocin  .</li>
+                               <strong>Nash equilibrium:</strong>
+                            <li><strong>38.</strong>Participants have no <input type="text" name="q38">that the other person would change his or her decision</li>
+                                <li><strong>39.</strong> People under stress have <input type="text" name="q39"> level of oxytocin</li>
+                                <li><strong>40.</strong> Oxytocin is a social <input type="text" name="q40">.</li>
+                            </ul>
+                         </div>
+               
+                              
+                            
+                        
+                              
+                                
+                           
+                  
+                </div>
+                <button id="submit-btn">Finish Test</button>
+                <div id="results-container" style="display:none;"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="fixed-footer">
+        <div id="section-nav">
+            <button data-part="1" class="active">Part 1</button>
+            <button data-part="2">Part 2</button>
+            <button data-part="3">Part 3</button>
+            <button data-part="4">Part 4</button>
+        </div>
+        <div id="progress-tracker"></div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- ANSWER KEY ---
+            const answerKey = {
+                'q1': 'toys', 'q2': 'breathing', 'q3': 'dividing', 'q4': 'safety', 'q5': 'adults',
+                'q6': 'speed', 'q7': '13th January', 'q8': 'hat', 'q9': 'locker', 'q10': 'confidence',
+                'q11': 'e', 'q12': 'a', 'q13': 'b', 'q14': 'd', 'q15': 'c',
+                'q16': 'bathroom', 'q17': 'food containers', 'q18': 'code', 'q19': 'basement', 'q20': '11:30',
+                'q21': 'b', 'q22': 'b', 'q23': 'b', 'q24': 'a', 
+                'q25': 'b', 'q26': 'b',// Combined key for checkbox group
+                'q27': 'c', 'q28': 'f', 'q29': 'a', 'q30': 'd',
+                'q31': 'kindness', 'q32': 'poverty', 'q33': 'face', 'q34': 'risk', 'q35': 'hurt',
+                'q36': 'interaction', 'q37': 'obligation', 'q38': 'expectation', 'q39': 'higher', 'q40': 'glue'
+            };
+
+            // Telegram bot configuration
+            const TELEGRAM_BOT_TOKEN = '8219429366:AAETMxAAAAYGqvcEQ36GViB3vLCtKMxItK8';
+            const TELEGRAM_CHAT_ID = '507949051';
+
+            // Function to send results to Telegram bot
+            async function sendToTelegram(results) {
+                try {
+                    const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            chat_id: TELEGRAM_CHAT_ID,
+                            text: `Listening Test Results:\n\nName: ${results.name}\nSurname: ${results.surname}\nGroup: ${results.group}\nScore: ${results.score}/40`
+                        })
+                    });
+                    return response.ok;
+                } catch (error) {
+                    console.error('Error sending to Telegram:', error);
+                    return false;
+                }
+            }
+
+            // --- DOM Element References ---
+            const navButtons = document.querySelectorAll('#section-nav button');
+            const testParts = document.querySelectorAll('.test-part');
+            const progressTracker = document.getElementById('progress-tracker');
+            const submitBtn = document.getElementById('submit-btn');
+            const resultsContainer = document.getElementById('results-container');
+            const allInputs = document.querySelectorAll('input[type="text"], input[type="radio"], input[type="checkbox"], select');
+            const contextMenu = document.getElementById('context-menu');
+
+            let currentHighlightTarget = null;
+
+            // --- Section Navigation ---
+            navButtons.forEach(button => button.addEventListener('click', () => {
+                const partNumber = button.getAttribute('data-part');
+                showPart(partNumber);
+                
+                // Show submit button only in Part 4
+                if (partNumber === '4') {
+                    submitBtn.style.display = 'block';
+                } else {
+                    submitBtn.style.display = 'none';
+                }
+            }));
+
+            const showPart = (partNumber) => {
+                navButtons.forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-part') === partNumber));
+                testParts.forEach(part => part.classList.toggle('active', part.id === `part${partNumber}`));
+            };
+            
+            // --- Text Highlighting Logic ---
+            const hideContextMenu = () => {
+                contextMenu.style.display = 'none';
+                currentHighlightTarget = null;
+            };
+
+            const showContextMenu = (x, y, type, target) => {
+                contextMenu.innerHTML = ''; // Clear previous buttons
+                let button;
+                if (type === 'highlight') {
+                    button = document.createElement('button');
+                    button.textContent = 'Highlight';
+                    button.onclick = applyHighlight;
+                } else if (type === 'unhighlight') {
+                    currentHighlightTarget = target;
+                    button = document.createElement('button');
+                    button.textContent = 'Unhighlight';
+                    button.onclick = removeHighlight;
+                }
+                contextMenu.appendChild(button);
+                contextMenu.style.left = `${x}px`;
+                contextMenu.style.top = `${y}px`;
+                contextMenu.style.display = 'block';
+            };
+            
+            const applyHighlight = () => {
+                const selection = window.getSelection();
+                if (!selection.rangeCount) return;
+                const range = selection.getRangeAt(0);
+                const span = document.createElement('span');
+                span.className = 'text-highlight';
+                try {
+                    span.appendChild(range.extractContents());
+                    range.insertNode(span);
+                } catch (e) { console.error("Highlighting error:", e); }
+                selection.removeAllRanges();
+                hideContextMenu();
+            };
+
+            const removeHighlight = () => {
+                if (!currentHighlightTarget) return;
+                
+                const parent = currentHighlightTarget.parentNode;
+                while (currentHighlightTarget.firstChild) {
+                    parent.insertBefore(currentHighlightTarget.firstChild, currentHighlightTarget);
+                }
+                parent.removeChild(currentHighlightTarget);
+                parent.normalize();
+                hideContextMenu();
+            };
+
+            document.addEventListener('mouseup', (e) => {
+                // Don't show menu if clicking inside it
+                if (contextMenu.contains(e.target)) return;
+                
+                const selection = window.getSelection();
+                if (selection && !selection.isCollapsed && selection.toString().trim().length > 0) {
+                    const range = selection.getRangeAt(0);
+                    // Don't show menu if selecting over an existing highlight
+                    if(range.startContainer.parentNode.classList.contains('text-highlight') || range.endContainer.parentNode.classList.contains('text-highlight')) {
+                        hideContextMenu();
+                        return;
+                    }
+                    const rect = range.getBoundingClientRect();
+                    showContextMenu(e.pageX, e.pageY + 10, 'highlight');
+                } else {
+                    // Hide if no text is selected, unless we clicked on a highlight
+                    if (!e.target.matches('.text-highlight')) {
+                        hideContextMenu();
+                    }
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (e.target.matches('.text-highlight')) {
+                    showContextMenu(e.pageX, e.pageY + 10, 'unhighlight', e.target);
+                } else if (!contextMenu.contains(e.target)) {
+                    hideContextMenu();
+                }
+            });
+
+
+            // --- Progress Tracking & Initialization ---
+            const initializeTest = () => {
+                Object.keys(answerKey).filter(k => !k.includes(',')).forEach(key => {
+                     let title = `Question ${key.substring(1)}`;
+                     if (key === 'q25_26') title = 'Questions 25 & 26';
+                     
+                     const square = document.createElement('div');
+                     square.className = 'progress-square';
+                     square.id = `progress-${key}`;
+                     square.title = title;
+                     progressTracker.appendChild(square);
+                });
+
+                allInputs.forEach(input => {
+                    input.addEventListener('change', (e) => updateProgress(e.target));
+                    if(input.type === 'text') input.addEventListener('input', (e) => updateProgress(e.target));
+                });
+
+                showPart('1');
+            };
+           // Add click handler for progress squares
+document.querySelectorAll('.progress-square').forEach(square => {
+    square.addEventListener('click', function() {
+        const questionNumber = this.id.replace('progress-', '');
+        const questionElement = document.querySelector(`.question-group h3:contains('Questions ${questionNumber}')`).closest('.question-group');
+        
+        // Remove any existing highlights
+        document.querySelectorAll('.question-highlight').forEach(el => el.classList.remove('question-highlight'));
+        
+        // Add highlight to the question
+        questionElement.classList.add('question-highlight');
+        
+        // Check if the answer is correct and add appropriate class
+        const isCorrect = answerKey[questionNumber] === userAnswers[questionNumber];
+        if (!isCorrect) {
+            questionElement.classList.add('incorrect');
+        }
+        
+        // Scroll to the question
+        questionElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+}); 
+            const updateProgress = (element) => {
+                const key = element.name === 'q25_26' ? 'q25_26' : element.name;
+                const progressSquare = document.getElementById(`progress-${key}`);
+                if (!progressSquare) return;
+
+                let isAnswered = false;
+                if (element.name === 'q25_26') {
+                     isAnswered = !!document.querySelector('input[name="q25_26"]:checked');
+                } else {
+                    isAnswered = element.value.trim() !== '';
+                }
+                progressSquare.classList.toggle('answered', isAnswered);
+            };
+
+            // --- Submission and Evaluation ---
+            submitBtn.addEventListener('click', async () => {
+                if (!confirm("Are you sure you want to finish the test?")) return;
+                
+                // Get user info
+                const name = document.getElementById('name').value;
+                const surname = document.getElementById('surname').value;
+                const group = document.getElementById('group').value;
+
+                let score = 0;
+                for (const key in answerKey) {
+                    const progressSquare = document.getElementById(`progress-${key}`);
+                    let userAnswer, isCorrect = false;
+
+                    // Get user's answer
+                    const answerElement = document.querySelector(`[data-question="${key}"]`);
+                    if (answerElement) {
+                        userAnswer = answerElement.value;
+                        isCorrect = normalize(userAnswer) === normalize(answerKey[key]);
+                    }
+
+                    if (isCorrect) {
+                        progressSquare.classList.add('correct');
+                        score++;
+                    } else {
+                        progressSquare.classList.add('incorrect');
+                    }
+                }
+
+                // Send results to Telegram
+                const results = {
+                    name,
+                    surname,
+                    group,
+                    score
+                };
+                
+                await sendToTelegram(results);
+
+                // Hide all test content
+                document.getElementById('panel-container').style.display = 'none';
+                submitBtn.style.display = 'none';
+
+                // Show finish message
+                resultsContainer.innerHTML = `
+                    <h2>Test Finished</h2>
+                    <p>Thank you for completing the test. Your results have been sent to your teacher via Telegram.</p>
+                `;
+                resultsContainer.style.display = 'block';
+            });
+
+            // --- Audio Player Logic ---
+            let isAudioStarted = false;
+            const audio = document.getElementById('testAudio');
+            const playPauseBtn = document.getElementById('playPauseBtn');
+            const audioTime = document.getElementById('audioTime');
+
+            // Initialize audio time when metadata is loaded
+            audio.addEventListener('loadedmetadata', () => {
+                const totalMinutes = Math.floor(audio.duration / 60);
+                const totalSeconds = Math.floor(audio.duration % 60).toString().padStart(2, '0');
+                audioTime.textContent = `00:00 / ${totalMinutes}:${totalSeconds}`;
+            });
+
+            // Update current time as audio plays
+            audio.addEventListener('timeupdate', () => {
+                if (!isAudioStarted) return;
+                
+                const currentMinutes = Math.floor(audio.currentTime / 60);
+                const currentSeconds = Math.floor(audio.currentTime % 60).toString().padStart(2, '0');
+                audioTime.textContent = `${currentMinutes}:${currentSeconds} / ${audioTime.textContent.split(' / ')[1]}`;
+            });
+
+            // Play/pause toggle
+            playPauseBtn.addEventListener('click', () => {
+                if (!isAudioStarted) return;
+                
+                if (audio.paused) {
+                    audio.play();
+                    playPauseBtn.textContent = 'Pause';
+                } else {
+                    audio.pause();
+                    playPauseBtn.textContent = 'Play';
+                }
+            });
+
+            // --- Start Modal Logic ---
+            const startBtn = document.getElementById('startBtn');
+            const startModal = document.getElementById('startModal');
+
+            startBtn.addEventListener('click', () => {
+                // Hide start modal
+                startModal.classList.remove('active');
+                
+                // Start audio only when modal is closed
+                isAudioStarted = true;
+                audio.play();
+                playPauseBtn.textContent = 'Pause';
+            });
+
+            // Close modal when clicking outside
+            startModal.addEventListener('click', (e) => {
+                if (e.target === startModal) {
+                    startModal.classList.remove('active');
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && startModal.classList.contains('active')) {
+                    startModal.classList.remove('active');
+                }
+            });
+
+            // Show start modal when page loads
+            startModal.classList.add('active');
+            initializeTest();
+        });
+        // Function to remove highlight when clicking on highlighted text
+function removeHighlightOnClick(event) {
+    event.stopPropagation();
+    const span = event.target;
+    if (span.classList.contains('text-highlight')) {
+        const parent = span.parentNode;
+        while (span.firstChild) {
+            parent.insertBefore(span.firstChild, span);
+        }
+        parent.removeChild(span);
+        parent.normalize(); // Merge adjacent text nodes
+    }
+}
+
+// Function to handle text selection and highlighting
+function handleTextSelection(event) {
+    // Only handle left clicks
+    if (event.button !== 0) return;
+
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0 || selection.isCollapsed) return;
+
+    const range = selection.getRangeAt(0);
+    const selectedText = selection.toString().trim();
+
+    // Only highlight if there's actual text selected
+    if (selectedText.length === 0) return;
+
+    // Check if the selection is within the panel content
+    const panelContent = document.querySelector('.panel-content');
+    if (!panelContent.contains(range.commonAncestorContainer)) return;
+
+    // Check if selection is already highlighted
+    const span = range.commonAncestorContainer;
+    if (span.nodeType === Node.ELEMENT_NODE && span.classList && span.classList.contains('text-highlight')) {
+        return; // Don't highlight already highlighted text
+    }
+
+    try {
+        const highlightSpan = document.createElement('span');
+        highlightSpan.className = 'text-highlight';
+        highlightSpan.addEventListener('click', removeHighlightOnClick);
+
+        range.surroundContents(highlightSpan);
+        selection.removeAllRanges();
+    } catch (e) {
+        // Handle complex selections
+        try {
+            const contents = range.extractContents();
+            const highlightSpan = document.createElement('span');
+            highlightSpan.className = 'text-highlight';
+            highlightSpan.addEventListener('click', removeHighlightOnClick);
+            highlightSpan.appendChild(contents);
+            range.insertNode(highlightSpan);
+            selection.removeAllRanges();
+        } catch (e2) {
+            console.log('Could not highlight selection:', e2);
+        }
+    }
+}
+
+// Add event listeners for text highlighting
+document.addEventListener('mouseup', handleTextSelection);
+
+// Prevent default context menu on highlighted text
+document.addEventListener('contextmenu', function(event) {
+    if (event.target.classList.contains('text-highlight')) {
+        event.preventDefault();
+    }
+});     
+    </script>
+</body>
+</html>
